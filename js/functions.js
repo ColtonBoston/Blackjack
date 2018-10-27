@@ -1,8 +1,10 @@
+import { Card } from './card';
+
 export function buildDeck(){
   let deck = [];
 
-  for (var i = 1; i <= 13; i++){
-    var rank;
+  for (let i = 1; i <= 13; i++){
+    let rank;
 
     switch(i) {
       case 1: rank = 'Ace'; break;
@@ -12,17 +14,28 @@ export function buildDeck(){
       default: rank = i;
     }
 
-    deck.push(rank + ' of Spades',
-      rank + ' of Hearts',
-      rank + ' of Diamonds',
-      rank + ' of Clubs');
+    deck.push(
+      new Card(rank, 'Spades'),
+      new Card(rank, 'Clubs'),
+      new Card(rank, 'Hearts'),
+      new Card(rank, 'Diamonds'),
+    );
   }
 
   return deck;
 }
 
-export function shuffle(deck){
-  console.log('shuffle');
+// Modern Fisher-Yates shuffle algorithm introduced by Richard Durstenfeld
+// Time complexity: O(n)
+export function shuffle(array){
+  let i, j, temp;
+
+  for (i = array.length - 1; i > 0; i--){
+    j = Math.floor(Math.random() * (i + 1));
+    temp = array[j];
+    array[j] = array[i];
+    array[i] = temp;
+  }
 }
 
 export function drawCard(deck){
