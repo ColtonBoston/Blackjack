@@ -25,4 +25,6 @@ export function shuffle(deck){
   console.log('shuffle');
 }
 
-Array.prototype.drawCard = Array.prototype.pop;
+export function drawCard(deck){
+  return deck.pop();
+}
