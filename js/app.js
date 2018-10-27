@@ -19,8 +19,17 @@ function main(){
 
   console.log('Creating new game.');
   // Create player and dealer
+  let player = new Player(100);
+  let dealer = new Dealer();
 
-  // Build and shuffle deck
+  // Build and concatenate a num of decks, then shuffle the entire deck.
+  let deck = [];
+
+  for (let i = 0; i < NUM_OF_DECKS; i++){
+    deck = deck.concat(Game.buildDeck());
+  }
+
+  Game.shuffle(deck);
 
   // User choose wager
 
