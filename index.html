@@ -8,6 +8,9 @@
     .display-none {
       display: none;
     }
+    h4 {
+      margin-bottom: 2px;
+    }
   </style>
   <body>
     <h1>Blackjack</h1>
@@ -20,26 +23,38 @@
 
       <div id="dealer-container" class="dealer-container">
         <h2>Dealer</h2>
+        <h4>Hand</h4>
         <div id="dealer-hand" class="dealer-hand">
 
         </div>
+        <h4>Hand Value</h4>
         <div id="dealer-total" class="dealer-total">
 
         </div>
       </div>
+      <hr>
       <div id="player-container" class="player-container">
         <h2>Player</h2>
+        <div id="player-money-display" class="player-money-display">
+
+        </div>
+        <div id="wager-display" class="wager-display">
+
+        </div>
         <div id="wager-container">
           <label for="wager-input">Make your wager ($5 to $500):</label>
           <input id="wager-input" type="number" name="wager" value="5" min=5 max=500>
           <button id="btn-make-wager" type="button">Make Wager</button>
         </div>
+        <h4>Hand</h4>
         <div id="player-hand" class="player-hand">
 
         </div>
+        <h4>Hand Value</h4>
         <div id="player-total" class="player-total">
 
         </div>
+        <br>
         <div id="player-options" class="player-options display-none">
           <button id="btn-hit" type="button">Hit</button>
           <button id="btn-stand" type="button">Stand</button>
@@ -47,12 +62,6 @@
           <button id="btn-split" class="display-none" type="button">Split Hand</button>
         </div>
         <hr>
-        <div id="player-money-display" class="player-money-display">
-
-        </div>
-        <div id="wager-display" class="wager-display">
-
-        </div>
         <div id="hand-result-display" class="">
 
         </div>
