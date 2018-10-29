@@ -246,7 +246,7 @@ import * as Page from './page';
   }
 
   function endCurrentHand(){
-    if (player.money > MIN_WAGER){
+    if (player.money >= MIN_WAGER){
       player.clearWager();
       player.renderWager();
       dealer.renderHandValue();
