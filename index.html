@@ -4,16 +4,62 @@
     <meta charset="utf-8">
     <title>Blackjack</title>
   </head>
+  <style type='text/css'>
+    .display-none {
+      display: none;
+    }
+  </style>
   <body>
     <h1>Blackjack</h1>
-    <div id='start-container' class="start-container">
-      <button id='btn-new-game' type="button" name="button">Create New Game</button>
-      <button id='btn-stats' type="button" name="button">View My Statistics</button>
+    <div id="start-container" class="start-container">
+      <button id="btn-start-game" type="button">Start New Game</button>
+      <button id="btn-stats" type="button">View My Statistics</button>
+      <hr>
     </div>
-    <hr>
-    <div id='game-container' class="game-container">
-      <label for="wager-input">Make your wager:</label>
-      <input id='wager-input' type="number" name="wager" value="5" min=5 max=100>
+    <div id="game-container" class="game-container display-none">
+
+      <div id="dealer-container" class="dealer-container">
+        <h2>Dealer</h2>
+        <div id="dealer-hand" class="dealer-hand">
+
+        </div>
+        <div id="dealer-total" class="dealer-total">
+
+        </div>
+      </div>
+      <div id="player-container" class="player-container">
+        <h2>Player</h2>
+        <div id="wager-container">
+          <label for="wager-input">Make your wager ($5 to $500):</label>
+          <input id="wager-input" type="number" name="wager" value="5" min=5 max=500>
+          <button id="btn-make-wager" type="button">Make Wager</button>
+        </div>
+        <div id="player-hand" class="player-hand">
+
+        </div>
+        <div id="player-total" class="player-total">
+
+        </div>
+        <hr>
+        <div id="player-money-display" class="player-money-display">
+
+        </div>
+        <div id="wager-display" class="wager-display">
+
+        </div>
+        <div id="hand-result-display" class="">
+
+        </div>
+        <div id="player-options" class="player-options display-none">
+          <button id="btn-hit" type="button">Hit</button>
+          <button id="btn-stand" type="button">Stand</button>
+          <button id="btn-double-down" class="" type="button">Double Down</button>
+          <button id="btn-split" class="display-none" type="button">Split Hand</button>
+        </div>
+        <div id="new-hand-container" class="new-hand-container display-none">
+          <button id="btn-new-hand" type="button">New Hand</button>
+        </div>
+      </div>
     </div>
     <script type="text/javascript" src="build/app.bundle.js"></script>
   </body>
