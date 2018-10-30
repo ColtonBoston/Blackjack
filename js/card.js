@@ -16,4 +16,14 @@ Card.prototype.toString = function(){
   return `${this.rank} of ${this.suit}`;
 }
 
+Card.prototype.render = function(){
+  let cardDiv = document.createElement('div');
+  if (!this.isFaceUp){
+    cardDiv.innerHTML = 'Hidden';
+  } else {
+    cardDiv.innerHTML = `${this.rank} of ${this.suit}`;
+  }
+  return cardDiv;
+}
+
 export { Card };
