@@ -35,7 +35,8 @@ export const containers = {
   dealer: document.getElementById('dealer-container'),
   player: document.getElementById('player-container'),
   wager: document.getElementById('wager-container'),
-  newHand: document.getElementById('new-hand-container')
+  newHand: document.getElementById('new-hand-container'),
+  playerSplit: document.getElementById('player-split-container')
 };
 
 export const displays = {
@@ -46,5 +47,7 @@ export const displays = {
   playerOptions: document.getElementById('player-options'),
   wager: document.getElementById('wager-display'),
   playerMoney: document.getElementById('player-money-display'),
-  handResult: document.getElementById('hand-result-display')
+  handResult: document.getElementById('hand-result-display'),
+  playerSplitHand: document.getElementById('player-split-hand'),
+  playerSplitTotal: document.getElementById('player-split-total')
 };
