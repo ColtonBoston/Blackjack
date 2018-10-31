@@ -30,14 +30,14 @@ Player.prototype.renderAll = function(){
 }
 
 Player.prototype.renderMoney = function(){
-  Page.displays.playerMoney.innerHTML = `Player money: $${this.money.toFixed(2)}`;
+  Page.displays.playerMoney.innerHTML = `<span class='text-shadow'>Money:</span> <span class='player-money'>$${this.money.toFixed(2)}</span>`;
 }
 
 Player.prototype.renderWager = function(){
   if (this.hasSplitHand){
-    Page.displays.wager.innerHTML = `Current wager: $${this.wager * 2} (split)`;
+    Page.displays.wager.innerHTML = `<span class='text-shadow'>Current wager:</span> <span class='player-wager'>$${this.wager * 2}</span> (split)`;
   } else {
-    Page.displays.wager.innerHTML = `Current wager: $${this.wager}`;
+    Page.displays.wager.innerHTML = `<span class='text-shadow'>Current wager:</span> <span class='player-wager'>$${this.wager}</span>`;
   }
 }
 
