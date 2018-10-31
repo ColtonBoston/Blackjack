@@ -18,10 +18,14 @@ Card.prototype.toString = function(){
 
 Card.prototype.render = function(){
   let cardDiv = document.createElement('div');
+  if ((this.suit === 'Hearts' || this.suit === 'Diamonds') && this.isFaceUp){
+    cardDiv.classList.add('text-red');
+  }
+  cardDiv.classList.add('card');
   if (!this.isFaceUp){
     cardDiv.innerHTML = 'Hidden';
   } else {
-    cardDiv.innerHTML = `${this.rank} of ${this.suit}`;
+    cardDiv.innerHTML = `<span class='card-text'>${this.rank} of ${this.suit}</span>`;
   }
   return cardDiv;
 }
