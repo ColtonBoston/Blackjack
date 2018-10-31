@@ -263,7 +263,7 @@ import * as Statistics from './statistics';
     Page.hideUIElement(Page.buttons.split);
     Page.hideUIElement(Page.buttons.doubleDown);
     Page.showUIElement(Page.containers.playerSplit);
-    addToResultsLog('Splitting player hand.');
+    addToResultsLog('Splitting player hand. Currently playing main hand.');
     player.splitPair();
   }
 
