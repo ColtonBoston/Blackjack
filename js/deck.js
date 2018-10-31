@@ -72,21 +72,13 @@ Deck.prototype.checkForOutOfCards = function(){
     console.log('Deck out of cards. Discard pile shuffled.')
     this.cards = this.discardPile;
     this.discardPile = [];
-    this.restoreAceValues();
     this.shuffle();
   }
 }
 
-Deck.prototype.restoreAceValues = function(){
-  this.cards.forEach(function(card){
-    if (card.rank === 'Ace' && card.value === 1){
-      card.value = 11;
-    }
-  });
-}
-
 Deck.prototype.dealCard = function(){
   let cardToDeal = this.cards.pop();
+  cardToDeal.isFaceUp = true;
   console.log(`Dealt ${cardToDeal.toString()}`);
   this.checkForOutOfCards();
   return cardToDeal;
