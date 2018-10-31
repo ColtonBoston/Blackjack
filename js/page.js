@@ -32,6 +32,7 @@ export const inputs = {
 };
 
 export const containers = {
+  game: document.getElementById('game-container'),
   dealer: document.getElementById('dealer-container'),
   player: document.getElementById('player-container'),
   wager: document.getElementById('wager-container'),
