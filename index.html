@@ -2,77 +2,81 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Blackjack</title>
     <link rel="stylesheet" href="css/app.css">
     <style type='text/css'>
     </style>
   </head>
   <body>
-    <h1>Blackjack</h1>
-    <div id="start-container" class="start-container">
-      <button id="btn-start-game" type="button">Start New Game</button>
-      <button id="btn-stats" type="button"><a href="views/statistics.html">View My Statistics</a></button>
-      <hr>
-    </div>
+    <header>
+      <h1 class="text-shadow">Blackjack</h1>
+      <div id="start-container" class="start-container">
+        <button id="btn-start-game" type="button">Start New Game</button>
+        <button id="btn-stats" type="button"><a href="views/statistics.html">View My Statistics</a></button>
+      </div>
+    </header>
     <div id="game-container" class="game-container display-none">
       <div id="dealer-container" class="dealer-container">
-        <h2>Dealer</h2>
-        <h4>Hand</h4>
+        <h2 class='text-shadow'>Dealer</h2>
+        <h4 class='text-shadow'>Hand</h4>
         <div id="dealer-hand" class="dealer-hand">
 
         </div>
-        <h4>Hand Value</h4>
+        <h4 class='text-shadow'>Value</h4>
         <div id="dealer-total" class="dealer-total">
 
         </div>
       </div>
-      <hr>
+      <div class="game-info-container text-shadow">
+        <h3>Blackjack pays 3 to 2</h3>
+        <h5>Dealer must draw to 16 and stand on all 17's</h5>
+      </div>
       <div id="player-container" class="player-container">
-        <h2>Player</h2>
+        <h2 class='text-shadow'>Player</h2>
         <div id="player-money-display" class="player-money-display">
 
         </div>
         <div id="wager-display" class="wager-display">
 
         </div>
-        <div id="wager-container">
+        <div id="wager-container" class="wager-container">
           <label for="wager-input">Make your wager ($5 to $500):</label>
           <input id="wager-input" type="number" name="wager" value="5" min=5 max=500>
           <button id="btn-make-wager" type="button">Make Wager</button>
         </div>
-        <h4>Hand</h4>
-        <div id="player-hand" class="player-hand">
+        <div class="hand">
+          <h4 class='text-shadow'>Hand</h4>
+          <div id="player-hand" class="player-hand">
 
-        </div>
-        <h4>Hand Value</h4>
-        <div id="player-total" class="player-total">
+          </div>
+          <h4 class='text-shadow'>Value</h4>
+          <div id="player-total" class="player-total">
 
+          </div>
         </div>
-        <div id="player-split-container" class="display-none">
-          <h4>Split Hand</h4>
+        <div id="player-split-container" class="display-none hand">
+          <h4 class='text-shadow'>Split Hand</h4>
           <div id="player-split-hand" class="player-hand">
 
           </div>
-          <h4>Split Hand Value</h4>
+          <h4 class='text-shadow'>Value</h4>
           <div id="player-split-total" class="player-total">
 
           </div>
         </div>
-        <br>
         <div id="player-options" class="player-options display-none">
           <button id="btn-hit" type="button">Hit</button>
           <button id="btn-stand" type="button">Stand</button>
-          <button id="btn-double-down" class="" type="button">Double Down</button>
+          <button id="btn-double-down" class="display-none" type="button">Double Down</button>
           <button id="btn-split" class="display-none" type="button">Split Pair</button>
         </div>
-        <hr>
-        <div id="hand-result-display" class="">
-
-        </div>
-        <div id="new-hand-container" class="new-hand-container display-none">
-          <button id="btn-new-hand" type="button">New Hand</button>
-        </div>
       </div>
+      <div id="new-hand-container" class="new-hand-container display-none">
+        <button id="btn-new-hand" type="button">New Hand</button>
+      </div>
+      <h2 class="results-header text-shadow">Hand Results</h2>
+      <div id="hand-result-display" class="hand-result-display"></div>
     </div>
     <script type="text/javascript" src="build/app.bundle.js"></script>
   </body>
