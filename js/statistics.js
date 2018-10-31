@@ -1,5 +1,5 @@
 let stats = {};
-if (localStorage.getItem('blackjackStatistics') === undefined){
+if (localStorage.getItem('blackjackStatistics') === null){
   stats = {
    numOfWins: 0,
    numOfLosses: 0,
@@ -7,7 +7,7 @@ if (localStorage.getItem('blackjackStatistics') === undefined){
    numOfPushes: 0,
    lifetimeEarnings: 0
  };
-  localStorage.setItem('blackjackStatistics', JSON.stringify(newStatistics));
+  localStorage.setItem('blackjackStatistics', JSON.stringify(stats));
 } else {
   stats = JSON.parse(localStorage.getItem('blackjackStatistics'));
 }
