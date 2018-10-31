@@ -1,6 +1,17 @@
 (function renderStats(){
-  let stats = JSON.parse(localStorage.getItem('blackjackStatistics'));
-  console.log(stats);
+  let stats = {};
+  if (localStorage.getItem('blackjackStatistics') === null){
+    stats = {
+     numOfWins: 0,
+     numOfLosses: 0,
+     numOfBlackjacks: 0,
+     numOfPushes: 0,
+     lifetimeEarnings: 0
+   };
+ } else {
+   stats = JSON.parse(localStorage.getItem('blackjackStatistics'));
+ }
+
   let statsContainer = document.getElementById('stats-container');
   // let earningsString =
   statsContainer.innerHTML = `
