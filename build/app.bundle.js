@@ -100,11 +100,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _card__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./card */ "./js/card.js");
 /* harmony import */ var _deck__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./deck */ "./js/deck.js");
 /* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./page */ "./js/page.js");
+/* harmony import */ var _statistics__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./statistics */ "./js/statistics.js");
 
 
 
 
- // IIFE
+
+ // console.log(Statistics.data);
+// Statistics.data.numOfWins++;
+// Statistics.save();
+// IIFE
 
 (function main() {
   'use strict';
@@ -117,7 +122,7 @@ __webpack_require__.r(__webpack_exports__);
       MIN_WAGER = _page__WEBPACK_IMPORTED_MODULE_4__["inputs"].wager.min,
       MAX_WAGER = _page__WEBPACK_IMPORTED_MODULE_4__["inputs"].wager.max; // Create player, dealer, and deck
 
-  var player, dealer, deck;
+  var player, activePlayerHand, dealer, deck;
   _page__WEBPACK_IMPORTED_MODULE_4__["addListeners"]([{
     element: _page__WEBPACK_IMPORTED_MODULE_4__["buttons"].startGame,
     eventType: 'click',
@@ -126,6 +131,10 @@ __webpack_require__.r(__webpack_exports__);
     element: _page__WEBPACK_IMPORTED_MODULE_4__["buttons"].makeWager,
     eventType: 'click',
     fn: validateWager
+  }, {
+    element: _page__WEBPACK_IMPORTED_MODULE_4__["inputs"].wager,
+    eventType: 'keypress',
+    fn: wagerInputEventHandler
   }, {
     element: _page__WEBPACK_IMPORTED_MODULE_4__["buttons"].hit,
     eventType: 'click',
@@ -139,6 +148,10 @@ __webpack_require__.r(__webpack_exports__);
     eventType: 'click',
     fn: playerDoubleDown
   }, {
+    element: _page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split,
+    eventType: 'click',
+    fn: playerSplitPair
+  }, {
     element: _page__WEBPACK_IMPORTED_MODULE_4__["buttons"].newHand,
     eventType: 'click',
     fn: startNewHand
@@ -146,10 +159,43 @@ __webpack_require__.r(__webpack_exports__);
 
   function startGame() {
     console.log('Start Game');
-    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](document.querySelector('.game-container'));
+    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].game);
     player = new _player__WEBPACK_IMPORTED_MODULE_0__["Player"](), dealer = new _dealer__WEBPACK_IMPORTED_MODULE_1__["Dealer"](), deck = new _deck__WEBPACK_IMPORTED_MODULE_3__["Deck"]();
+    activePlayerHand = player.getActiveHand();
     player.renderMoney();
     startNewHand();
+  }
+
+  function startNewHand() {
+    clearPreviousHand();
+    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].wager);
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].newHand);
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].playerOptions);
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split);
+  }
+
+  function clearPreviousHand() {
+    deck.addHandToDiscardPile(player.hand.cards);
+    deck.addHandToDiscardPile(dealer.hand.cards);
+
+    if (player.hasSplitHand) {
+      deck.addHandToDiscardPile(player.splitHand.cards);
+      player.splitHand.clear();
+      player.splitHand.render();
+      player.splitHand.renderValue();
+      player.splitHand = {};
+    }
+
+    player.hand.clear();
+    player.clearWager();
+    player.hasSplitHand = false;
+    player.renderAll();
+    dealer.hand.clear();
+    dealer.hand.render();
+    dealer.hand.renderValue();
+    _page__WEBPACK_IMPORTED_MODULE_4__["clearUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].handResult);
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].playerSplit);
+    activePlayerHand = player.getActiveHand();
   }
 
   function validateWager() {
@@ -159,7 +205,8 @@ __webpack_require__.r(__webpack_exports__);
       placeWager(wager);
     } else {
       console.log('Invalid wager.');
-      showHandResult('Invalid wager.');
+      _page__WEBPACK_IMPORTED_MODULE_4__["displays"].handResult.innerHTML = '';
+      addToResultsLog("Invalid wager. Enter a wager between ".concat(MIN_WAGER, " and ").concat(MAX_WAGER, ". You must also have enough money!"));
     }
   }
 
@@ -182,37 +229,38 @@ __webpack_require__.r(__webpack_exports__);
     console.log('Deal Cards');
 
     for (var i = 0; i < 2; i++) {
-      player.addToHand(deck.dealCard());
-      dealer.addToHand(deck.dealCard());
+      activePlayerHand.addCard(deck.dealCard());
+      dealer.hand.addCard(deck.dealCard());
     }
 
     dealer.hand.cards[1].isFaceUp = false;
-    player.checkForBust(); // Calling this to check for 2 aces
 
-    if (player.canSplitHand()) {
+    if (player.canSplitPair()) {
       _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split);
     }
 
-    player.renderHand();
-    dealer.renderHand(); // player.hand.value = 21;
+    activePlayerHand.render();
+    activePlayerHand.renderValue();
+    dealer.hand.render(); // player.hand.value = 21;
 
     checkForBlackjacks();
-  }
+  } // Only run after initial deal
+
 
   function checkForBlackjacks() {
-    var playerBlackjack = player.checkForBlackjack(),
+    var playerBlackjack = activePlayerHand.checkForBlackjack(),
         dealerBlackjack = false,
         // Initialize to false
     dealerFaceUpCardValue = dealer.hand.cards[0].value; // Checks if dealer's hand is a blackjack only if their face up card is a 10, Face card, or an Ace
 
     if (dealerFaceUpCardValue >= 10) {
-      dealerBlackjack = dealer.checkForBlackjack();
+      dealerBlackjack = dealer.hand.checkForBlackjack();
     }
 
     if (playerBlackjack && dealerBlackjack) {
       console.log('Tie!');
       flipDealerCard();
-      handlePush();
+      handleTie();
     } else if (playerBlackjack) {
       console.log('Player Blackjack!');
       flipDealerCard();
@@ -228,7 +276,7 @@ __webpack_require__.r(__webpack_exports__);
 
   function flipDealerCard() {
     dealer.hand.cards[1].isFaceUp = true;
-    dealer.renderHand();
+    dealer.hand.render();
   }
 
   function handlePlayerBlackjack() {
@@ -236,7 +284,9 @@ __webpack_require__.r(__webpack_exports__);
     console.log("Player wins $".concat(winnings.toFixed(2), " for Blackjack on wager of $").concat(player.wager.toFixed(2), "!"));
     player.money += winnings + player.wager;
     player.renderMoney();
-    showHandResult("Player wins $".concat(winnings.toFixed(2), " for Blackjack on $").concat(player.wager, " wager! "));
+    addToResultsLog("Player wins $".concat(winnings.toFixed(2), " for Blackjack on $").concat(player.wager, " wager! "));
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfBlackjacks++;
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].lifetimeEarnings += winnings;
     endCurrentHand();
   }
 
@@ -246,33 +296,48 @@ __webpack_require__.r(__webpack_exports__);
     console.log("Player wins $".concat(winnings.toFixed(2), " for win on wager of $").concat(player.wager.toFixed(2), "!"));
     player.money += winnings + player.wager;
     player.renderMoney();
-    showHandResult("Player wins $".concat(winnings.toFixed(2), " on $").concat(player.wager, " wager. "));
-    endCurrentHand();
+    addToResultsLog("Player wins $".concat(winnings.toFixed(2), " on $").concat(player.wager, " wager. "));
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfWins++;
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].lifetimeEarnings += winnings;
   }
 
   function handlePlayerBust() {
     console.log('handle player bust');
-    showHandResult("Player bust! ");
+    addToResultsLog("<br><b>Hand Result</b><br>Player bust! ");
+    activePlayerHand.isCompleted = true;
     handlePlayerLoss();
-    flipDealerCard();
-    endCurrentHand();
+    endPlayerHand();
   }
 
   function handlePlayerLoss() {
     var losses = player.wager;
-    showHandResult("Player loses $".concat(losses.toFixed(2), " wager."));
+    addToResultsLog("Player loses $".concat(losses.toFixed(2), " wager."));
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfLosses++;
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].lifetimeEarnings -= losses;
   }
 
   function handleDealerBlackjack() {
-    showHandResult('Dealer Blackjack! ');
+    addToResultsLog("<b>Dealer Blackjack!</b> ");
     handlePlayerLoss();
+    endCurrentHand();
+  }
+
+  function handleTie() {
+    player.money += player.wager;
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfPushes++;
+    addToResultsLog("<br><b>Hand Result</b><br>Push! Player keeps wager of $".concat(player.wager, "."));
     endCurrentHand();
   }
 
   function handlePush() {
     player.money += player.wager;
-    console.log(player.money);
-    endCurrentHand();
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfPushes = parseInt(_statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfPushes) + 1;
+    console.log(_statistics__WEBPACK_IMPORTED_MODULE_5__["data"].numOfPushes);
+    addToResultsLog("<br><b>Hand Result</b><br>Push! Player keeps wager of $".concat(player.wager, "."));
+
+    if (!player.hasHandToCompare()) {
+      endCurrentHand();
+    }
   }
 
   function beginPlayerTurn() {
@@ -283,106 +348,132 @@ __webpack_require__.r(__webpack_exports__);
 
   function playerHit() {
     console.log('hit');
-    player.addToHand(deck.dealCard());
-    player.renderHand();
+    activePlayerHand.addCard(deck.dealCard());
+    activePlayerHand.render();
+    activePlayerHand.renderValue();
     _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].doubleDown);
     _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split);
 
-    if (player.checkFor21()) {
+    if (activePlayerHand.checkFor21()) {
       playerStand();
-    } else if (player.checkForBust()) {
+    } else if (activePlayerHand.checkForBust()) {
       console.log('player bust');
       handlePlayerBust();
-    } else {
-      console.log('Continue');
     }
   }
 
   function playerStand() {
     console.log('Player stands');
-
-    if (player.hasSplitHand) {} else {
-      hidePlayerOptions();
-      beginDealerTurn();
-    }
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].playerOptions);
+    endPlayerHand();
   }
 
   function playerDoubleDown() {
     player.money -= player.wager;
     player.wager += player.wager;
     player.renderAll();
-    playerHit();
+    playerHit(); // Hand is checked for 21/bust in playerHit()
 
-    if (player.hand.value < 21) {
+    if (activePlayerHand.value < 21) {
+      endPlayerHand();
+    }
+  }
+
+  function playerSplitPair() {
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split);
+    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].doubleDown);
+    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].playerSplit);
+    addToResultsLog('Splitting player hand. Currently playing main hand.');
+    player.splitPair();
+  }
+
+  function endPlayerHand() {
+    activePlayerHand.setToInactive();
+    console.log(player.hasActiveHand());
+
+    if (player.hasActiveHand()) {
+      if (activePlayerHand.value <= 21) {
+        addToResultsLog("Player stands on value of ".concat(activePlayerHand.value, "."));
+      }
+
+      activePlayerHand = player.getActiveHand();
+      console.log(activePlayerHand);
+      addToResultsLog('<br>Player now playing split hand.');
+      beginPlayerTurn();
+    } else if (player.hasHandToCompare()) {
+      console.log('has hand');
+
+      if (activePlayerHand.value <= 21) {
+        addToResultsLog("Player stands on value of ".concat(activePlayerHand.value, "."));
+      }
+
       beginDealerTurn();
+    } else {
+      endCurrentHand();
     }
   }
 
   function beginDealerTurn() {
     flipDealerCard();
-    dealer.checkForBust(); // Check for dealer having 2 aces
+    addToResultsLog('<br>Beginning dealer\'s turn.');
 
-    while (dealer.hand.value < dealer.minimumTotal || dealer.hand.value === 17 && dealer.hand.numOfHighAces > 0) {
-      dealer.addToHand(deck.dealCard());
-      dealer.checkForBust();
-      dealer.renderHand();
+    while (dealer.hand.value < dealer.minimumTotal || dealer.hand.value === 17 && dealer.hand.numOfAces > 0) {
+      dealer.hand.addCard(deck.dealCard());
+      dealer.hand.render();
     }
 
-    dealer.renderHandValue(_page__WEBPACK_IMPORTED_MODULE_4__["displays"].dealerTotal);
+    dealer.hand.renderValue();
+    addToResultsLog("Dealer draws to ".concat(dealer.hand.value, "."));
 
-    if (dealer.hand.value > player.hand.value && dealer.hand.value <= 21) {
-      showHandResult("Dealer ".concat(dealer.hand.value, " beats player ").concat(player.hand.value, ". "));
+    while (player.hasHandToCompare()) {
+      activePlayerHand = player.getHandToCompare();
+      activePlayerHand.complete();
+      compareHands();
+    }
+
+    endCurrentHand();
+  }
+
+  function compareHands() {
+    console.log('comparing hands');
+
+    if (dealer.hand.value > activePlayerHand.value && dealer.hand.value <= 21) {
+      addToResultsLog("<br><b>Hand Result</b><br>Dealer ".concat(dealer.hand.value, " beats player ").concat(activePlayerHand.value, ". "));
       handlePlayerLoss();
       endCurrentHand();
-    } else if (dealer.hand.value === player.hand.value) {
-      showHandResult("Push! Player keeps wager of ".concat(player.wager));
+    } else if (dealer.hand.value === activePlayerHand.value) {
       handlePush();
+    } else if (dealer.hand.checkForBust()) {
+      addToResultsLog("Dealer bust! ");
+      handlePlayerWin();
     } else {
-      showHandResult("Dealer bust! ");
+      addToResultsLog("<br><b>Hand Result</b><br>Player ".concat(activePlayerHand.value, " beats dealer ").concat(dealer.hand.value, ". "));
       handlePlayerWin();
     }
   }
 
-  function startNewHand() {
-    deck.addHandToDiscardPile(player.hand.cards);
-    deck.addHandToDiscardPile(dealer.hand.cards);
-    player.clearHand();
-    player.clearWager();
-    player.renderAll();
-    dealer.clearHand();
-    dealer.renderHand();
-    dealer.renderHandValue();
-    _page__WEBPACK_IMPORTED_MODULE_4__["clearUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].handResult);
-    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].wager);
-    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].newHand);
-    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].playerOptions);
-    _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["buttons"].split);
-  }
-
   function endCurrentHand() {
-    if (player.money > MIN_WAGER) {
-      player.clearWager();
-      player.renderWager();
-      dealer.renderHandValue();
-      showNewHandOption();
+    console.log('end current hand');
+    _statistics__WEBPACK_IMPORTED_MODULE_5__["save"]();
+
+    if (player.money >= MIN_WAGER) {
+      _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].newHand);
     } else {
       console.log('Game over!');
-      showHandResult('You do not have enough money to play. Game over! Start a new game to continue playing.');
+      addToResultsLog('You do not have enough money to play. Game over! Start a new game to continue playing.');
     }
 
-    hidePlayerOptions();
-  }
-
-  function showHandResult(result) {
-    _page__WEBPACK_IMPORTED_MODULE_4__["displays"].handResult.innerHTML += result;
-  }
-
-  function showNewHandOption() {
-    _page__WEBPACK_IMPORTED_MODULE_4__["showUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["containers"].newHand);
-  }
-
-  function hidePlayerOptions() {
     _page__WEBPACK_IMPORTED_MODULE_4__["hideUIElement"](_page__WEBPACK_IMPORTED_MODULE_4__["displays"].playerOptions);
+  }
+
+  function addToResultsLog(result) {
+    _page__WEBPACK_IMPORTED_MODULE_4__["displays"].handResult.innerHTML += result + "<br>";
+  }
+
+  function wagerInputEventHandler(e) {
+    if (e.keyCode === 13) {
+      validateWager();
+    }
   }
 })();
 
@@ -423,6 +514,24 @@ Card.prototype.toString = function () {
   return "".concat(this.rank, " of ").concat(this.suit);
 };
 
+Card.prototype.render = function () {
+  var cardDiv = document.createElement('div');
+
+  if ((this.suit === 'Hearts' || this.suit === 'Diamonds') && this.isFaceUp) {
+    cardDiv.classList.add('text-red');
+  }
+
+  cardDiv.classList.add('card');
+
+  if (!this.isFaceUp) {
+    cardDiv.innerHTML = 'Hidden';
+  } else {
+    cardDiv.innerHTML = "<span class='card-text'>".concat(this.rank, " of ").concat(this.suit, "</span>");
+  }
+
+  return cardDiv;
+};
+
 
 
 /***/ }),
@@ -446,6 +555,7 @@ function Dealer() {
   _person__WEBPACK_IMPORTED_MODULE_0__["Person"].call(this);
   this.name = 'Dealer';
   this.minimumTotal = 17;
+  this.hand.setDisplays(_page__WEBPACK_IMPORTED_MODULE_1__["displays"].dealerHand, _page__WEBPACK_IMPORTED_MODULE_1__["displays"].dealerTotal);
 }
 
 Dealer.prototype = Object.create(_person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype);
@@ -454,15 +564,6 @@ Object.defineProperty(Dealer.prototype, 'constructor', {
   enumerable: false,
   writable: true
 });
-
-Dealer.prototype.renderHand = function () {
-  _person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype.renderHand.call(this, _page__WEBPACK_IMPORTED_MODULE_1__["displays"].dealerHand);
-};
-
-Dealer.prototype.renderHandValue = function () {
-  _person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype.renderHandValue.call(this, _page__WEBPACK_IMPORTED_MODULE_1__["displays"].dealerTotal);
-};
-
 
 
 /***/ }),
@@ -570,21 +671,13 @@ Deck.prototype.checkForOutOfCards = function () {
     console.log('Deck out of cards. Discard pile shuffled.');
     this.cards = this.discardPile;
     this.discardPile = [];
-    this.restoreAceValues();
     this.shuffle();
   }
 };
 
-Deck.prototype.restoreAceValues = function () {
-  this.cards.forEach(function (card) {
-    if (card.rank === 'Ace' && card.value === 1) {
-      card.value = 11;
-    }
-  });
-};
-
 Deck.prototype.dealCard = function () {
   var cardToDeal = this.cards.pop();
+  cardToDeal.isFaceUp = true;
   console.log("Dealt ".concat(cardToDeal.toString()));
   this.checkForOutOfCards();
   return cardToDeal;
@@ -594,6 +687,103 @@ Deck.prototype.addHandToDiscardPile = function (hand) {
   this.discardPile = this.discardPile.concat(hand);
 };
 
+
+
+/***/ }),
+
+/***/ "./js/hand.js":
+/*!********************!*\
+  !*** ./js/hand.js ***!
+  \********************/
+/*! exports provided: Hand */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Hand", function() { return Hand; });
+/* harmony import */ var _card__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./card */ "./js/card.js");
+
+
+function Hand() {
+  this.cards = [], this.value = 0, this.numOfAces = 0, this.isActive = true, // Do not change this value in the dealer's hand,
+  this.isCompleted = false;
+}
+
+Hand.prototype.setDisplays = function (display, totalDisplay) {
+  this.display = display;
+  this.totalDisplay = totalDisplay;
+};
+
+Hand.prototype.addCard = function (card) {
+  this.cards.push(card);
+
+  if (card.rank === 'Ace') {
+    this.numOfAces++;
+  }
+
+  this.updateValue();
+};
+
+Hand.prototype.updateValue = function () {
+  var value = this.cards.reduce(function (acc, card) {
+    return acc + card.value;
+  }, 0);
+
+  if (this.numOfAces > 0 && value > 21) {
+    for (var i = 0; i < this.numOfAces; i++) {
+      value -= 10;
+      if (value <= 21) break;
+    }
+  }
+
+  this.value = value;
+};
+
+Hand.prototype.render = function () {
+  var display = this.display;
+  this.display.innerHTML = '';
+  this.cards.forEach(function (card) {
+    display.appendChild(card.render());
+  });
+};
+
+Hand.prototype.renderValue = function () {
+  var value = this.value > 0 ? this.value : "";
+  this.totalDisplay.innerHTML = value;
+};
+
+Hand.prototype.checkForBust = function () {
+  return this.value > 21;
+};
+
+Hand.prototype.clear = function () {
+  this.cards = [];
+  this.value = 0;
+  this.numOfAces = 0, this.isActive = true, // Do not change this value in the dealer's hand,
+  this.isCompleted = false;
+};
+
+Hand.prototype.checkForBlackjack = function () {
+  if (this.value === 21) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Hand.prototype.setToActive = function () {
+  this.isActive = true;
+};
+
+Hand.prototype.setToInactive = function () {
+  this.isActive = false;
+};
+
+Hand.prototype.complete = function () {
+  this.isCompleted = true;
+};
+
+Hand.prototype.checkFor21 = Hand.prototype.checkForBlackjack;
 
 
 /***/ }),
@@ -645,10 +835,12 @@ var inputs = {
   wager: document.getElementById('wager-input')
 };
 var containers = {
+  game: document.getElementById('game-container'),
   dealer: document.getElementById('dealer-container'),
   player: document.getElementById('player-container'),
   wager: document.getElementById('wager-container'),
-  newHand: document.getElementById('new-hand-container')
+  newHand: document.getElementById('new-hand-container'),
+  playerSplit: document.getElementById('player-split-container')
 };
 var displays = {
   playerHand: document.getElementById('player-hand'),
@@ -658,7 +850,9 @@ var displays = {
   playerOptions: document.getElementById('player-options'),
   wager: document.getElementById('wager-display'),
   playerMoney: document.getElementById('player-money-display'),
-  handResult: document.getElementById('hand-result-display')
+  handResult: document.getElementById('hand-result-display'),
+  playerSplitHand: document.getElementById('player-split-hand'),
+  playerSplitTotal: document.getElementById('player-split-total')
 };
 
 /***/ }),
@@ -673,96 +867,13 @@ var displays = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Person", function() { return Person; });
+/* harmony import */ var _hand__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./hand */ "./js/hand.js");
+
+
 function Person() {
-  this.hand = {
-    cards: [],
-    value: 0,
-    numOfHighAces: 0
-  };
+  this.hand = new _hand__WEBPACK_IMPORTED_MODULE_0__["Hand"]();
 }
 
-Person.prototype.addToHand = function (card) {
-  this.hand.cards.push(card);
-  this.updateHandValue();
-
-  if (card.rank === 'Ace') {
-    this.hand.numOfHighAces++;
-  }
-};
-
-Person.prototype.updateHandValue = function () {
-  this.hand.value = this.hand.cards.reduce(function (acc, card) {
-    return acc + card.value;
-  }, 0);
-};
-
-Person.prototype.reduceOneHighAce = function () {
-  var index = this.hand.cards.findIndex(function (card) {
-    return card.value === 11;
-  });
-  console.log("Reducing ".concat(this.name, "'s ").concat(this.hand.cards[index].rank, " of ").concat(this.hand.cards[index].suit, " to 1"));
-  this.hand.cards[index].value = 1;
-  this.hand.numOfHighAces--;
-  this.updateHandValue();
-  this.renderHand();
-};
-
-Person.prototype.renderHand = function (parentElement) {
-  parentElement.innerHTML = '';
-  this.hand.cards.forEach(function (card) {
-    var cardDiv = document.createElement('div');
-
-    if (!card.isFaceUp) {
-      cardDiv.innerHTML = 'Hidden';
-      console.log(card);
-    } else {
-      cardDiv.innerHTML = "".concat(card.rank, " of ").concat(card.suit);
-    }
-
-    parentElement.append(cardDiv);
-  });
-};
-
-Person.prototype.renderHandValue = function (parentElement) {
-  var value = this.hand.value > 0 ? this.hand.value : "";
-  parentElement.innerHTML = value;
-};
-
-Person.prototype.checkForBust = function () {
-  if (this.hand.value > 21) {
-    if (this.hand.numOfHighAces > 0) {
-      this.reduceOneHighAce();
-      this.checkForBust();
-    } else {
-      console.log('Bust');
-      return true;
-    }
-  } else {
-    return false;
-  }
-};
-
-Person.prototype.clearHand = function () {
-  this.hand.cards = [];
-  this.hand.value = 0;
-  this.hand.numOfHighAces = 0;
-};
-
-Person.prototype.findFirstHighAceIndex = function () {
-  var index = this.hand.cards.findIndex(function (card) {
-    return card.value === 11;
-  });
-};
-
-Person.prototype.checkForBlackjack = function () {
-  if (this.hand.value === 21) {
-    return true;
-  } else {
-    return false;
-  }
-};
-
-Person.prototype.checkFor21 = Person.prototype.checkForBlackjack;
 
 
 /***/ }),
@@ -778,7 +889,9 @@ Person.prototype.checkFor21 = Person.prototype.checkForBlackjack;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Player", function() { return Player; });
 /* harmony import */ var _person__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./person */ "./js/person.js");
-/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./page */ "./js/page.js");
+/* harmony import */ var _hand__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./hand */ "./js/hand.js");
+/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./page */ "./js/page.js");
+
 
 
 
@@ -788,6 +901,8 @@ function Player() {
   this.money = 100;
   this.wager = 0;
   this.hasSplitHand = false;
+  this.splitHand = {};
+  this.hand.setDisplays(_page__WEBPACK_IMPORTED_MODULE_2__["displays"].playerHand, _page__WEBPACK_IMPORTED_MODULE_2__["displays"].playerTotal);
 }
 
 Player.prototype = Object.create(_person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype);
@@ -798,37 +913,130 @@ Object.defineProperty(Player.prototype, 'constructor', {
 }); // Render all of player's data that changes
 
 Player.prototype.renderAll = function () {
-  this.renderHand();
+  this.hand.render();
+  this.hand.renderValue();
   this.renderMoney();
   this.renderWager();
 };
 
-Player.prototype.renderHand = function () {
-  _person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype.renderHand.call(this, _page__WEBPACK_IMPORTED_MODULE_1__["displays"].playerHand);
-  _person__WEBPACK_IMPORTED_MODULE_0__["Person"].prototype.renderHandValue.call(this, _page__WEBPACK_IMPORTED_MODULE_1__["displays"].playerTotal);
-};
-
 Player.prototype.renderMoney = function () {
-  _page__WEBPACK_IMPORTED_MODULE_1__["displays"].playerMoney.innerHTML = "Player money: $".concat(this.money.toFixed(2));
+  _page__WEBPACK_IMPORTED_MODULE_2__["displays"].playerMoney.innerHTML = "<span class='text-shadow'>Money:</span> <span class='player-money'>$".concat(this.money.toFixed(2), "</span>");
 };
 
 Player.prototype.renderWager = function () {
-  _page__WEBPACK_IMPORTED_MODULE_1__["displays"].wager.innerHTML = "Current wager: $".concat(this.wager);
+  if (this.hasSplitHand) {
+    _page__WEBPACK_IMPORTED_MODULE_2__["displays"].wager.innerHTML = "<span class='text-shadow'>Current wager:</span> <span class='player-wager'>$".concat(this.wager * 2, "</span> (split)");
+  } else {
+    _page__WEBPACK_IMPORTED_MODULE_2__["displays"].wager.innerHTML = "<span class='text-shadow'>Current wager:</span> <span class='player-wager'>$".concat(this.wager, "</span>");
+  }
 };
 
 Player.prototype.clearWager = function () {
   this.wager = 0;
 };
 
-Player.prototype.canSplitHand = function () {
-  if (this.hand.cards.length === 2 && this.hand.cards[0].value === this.hand.cards[1].value) {
+Player.prototype.hasActiveHand = function () {
+  if (this.hasSplitHand) {
+    return this.hand.isActive || this.splitHand.isActive;
+  } else {
+    return this.hand.isActive;
+  }
+};
+
+Player.prototype.getActiveHand = function () {
+  if (this.hasSplitHand) {
+    return this.hand.isActive ? this.hand : this.splitHand;
+  } else {
+    return this.hand;
+  }
+};
+
+Player.prototype.hasHandToCompare = function () {
+  if (this.hasSplitHand) {
+    return !this.hand.isCompleted || !this.splitHand.isCompleted;
+  } else {
+    return !this.hand.isCompleted;
+  }
+};
+
+Player.prototype.getHandToCompare = function () {
+  if (this.hasSplitHand) {
+    return !this.hand.isCompleted ? this.hand : this.splitHand;
+  } else {
+    return this.hand;
+  }
+};
+
+Player.prototype.canSplitPair = function () {
+  if (this.hand.cards.length === 2 && this.hand.cards[0].value === this.hand.cards[1].value && this.money >= this.wager && this.hand.cards[0].rank !== 'Ace') {
     return true;
   } else {
     return false;
   }
 };
 
+Player.prototype.splitPair = function () {
+  this.splitHand = new _hand__WEBPACK_IMPORTED_MODULE_1__["Hand"]();
+  this.splitHand.setDisplays(_page__WEBPACK_IMPORTED_MODULE_2__["displays"].playerSplitHand, _page__WEBPACK_IMPORTED_MODULE_2__["displays"].playerSplitTotal);
+  this.hasSplitHand = true;
+  this.splitHand.addCard(this.hand.cards.pop());
+  this.hand.updateValue();
+  this.money -= this.wager;
+  this.renderMoney();
+  this.renderWager();
+  this.hand.render();
+  this.hand.renderValue();
+  this.splitHand.render();
+  this.splitHand.renderValue();
+};
 
+Player.prototype.renderSplitHand = function () {
+  var display = this.splitHand.display;
+  display.innerHTML = '';
+  this.splitHand.cards.forEach(function (card) {
+    display.appendChild(card.render());
+  });
+};
+
+Player.prototype.renderSplitHandValue = function () {
+  var value = this.splitHand.value;
+  this.splitHand.totalDisplay.innerHTML = value;
+};
+
+
+
+/***/ }),
+
+/***/ "./js/statistics.js":
+/*!**************************!*\
+  !*** ./js/statistics.js ***!
+  \**************************/
+/*! exports provided: data, save */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "data", function() { return data; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "save", function() { return save; });
+var stats = {};
+
+if (localStorage.getItem('blackjackStatistics') === null) {
+  stats = {
+    numOfWins: 0,
+    numOfLosses: 0,
+    numOfBlackjacks: 0,
+    numOfPushes: 0,
+    lifetimeEarnings: 0
+  };
+  localStorage.setItem('blackjackStatistics', JSON.stringify(stats));
+} else {
+  stats = JSON.parse(localStorage.getItem('blackjackStatistics'));
+}
+
+var data = stats;
+function save() {
+  localStorage.setItem('blackjackStatistics', JSON.stringify(data));
+}
 
 /***/ })
 
